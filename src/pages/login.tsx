@@ -1,19 +1,22 @@
+import { useRouter } from "next/router";
 import { useState } from "react";
 import supabase from "../../utils/supabaseClient";
 
-export default function SignUp() {
+export default function Login() {
     const [email, setEmail] = useState<string | undefined>();
     const [password, setPassword] = useState<string | undefined>();
+    const router = useRouter();
 
-    async function signUpWithEmail() {
+    async function signInWithEmail() {
         try {
             if (email && password) {
-                const resp = await supabase.auth.signUp({ email: email, password: password});
+                const resp = await supabase.auth.signInWithPassword({ email: email, password: password});
                 if (resp.error) {
                     throw resp.error;
                 }
                 const userID = resp.data.user?.id;
                 console.log("user id: " + userID);
+                router.push("/");
             }
         }
         catch {
@@ -54,9 +57,9 @@ export default function SignUp() {
             <button
                 type="button"
                 className="mt-4 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-                onClick={signUpWithEmail}
+                onClick={signInWithEmail}
             >
-                sign up
+                Login
             </button>
         </div>
     );
