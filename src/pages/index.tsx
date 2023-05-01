@@ -1,12 +1,17 @@
 import supabase from '../../utils/supabaseClient'
 import { useEffect, useState } from 'react'
 
+type Link = {
+  title: string;
+  url: string;
+}
 
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [userID, setUserID] = useState<string | undefined>();
   const [title, setTitle] = useState<string | undefined>();
   const [url, setUrl] = useState<string | undefined>();
+  const [links, setLinks] = useState<Link[]>();
 
   useEffect(() => {
     const getUser = async () => {
@@ -16,11 +21,29 @@ export default function Home() {
         const userID = user.data.user?.id;
         setIsAuthenticated(true);
         setUserID(userID);
+        // console.log("authenticated");
       }
       console.log("isAuthenticated: ", isAuthenticated);
     };
     getUser();  // need to call the function
   }, []);
+
+  useEffect(() => {
+    const getLinks = async () => {
+      try {
+        const {data, error} = await supabase.from('links').select("title, url").eq('user_id', userID);
+        if (error) throw error;
+        console.log("data: ", data);
+        setLinks(data);
+      }
+      catch (error) {
+        console.log("error: ", error);
+      }
+    }
+    if (userID) {
+      getLinks();
+    }
+  }, [userID])
 
   const addNewLink = async () => {
     try {
@@ -32,6 +55,12 @@ export default function Home() {
         }).select();
         if (error) throw error;
         console.log("data: ", data)
+        if (links) {
+          setLinks([...(data as Link[]), ...links]);
+        }        
+        // if (links) {
+        //   setLinks([...data, ...links]);
+        // } 
       }
     }
     catch (error) {
@@ -40,7 +69,21 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col w-full justify-center items-center mt-4">  
+    <div className="flex flex-col w-full justify-center items-center mt-4">
+      {
+        links?.map((link: Link, index: number) => (
+          <div
+            className="shadow-xl w-96 bg-indigo-500 mt-4 p-4 rounded-lg text-center text-white"
+            key={index}
+            onClick={(e) => {
+            e.preventDefault();
+            window.location.href = link.url;
+            }}
+          >
+            {link.title}
+          </div>
+        ))
+      }
       {
         isAuthenticated && (
           <>
