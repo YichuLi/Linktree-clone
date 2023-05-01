@@ -13,11 +13,27 @@ export default function SignUp() {
                     throw resp.error;
                 }
                 const userID = resp.data.user?.id;
-                console.log("user id: " + userID);
+                if (userID) {
+                    await createUser(userID);
+                    console.log("user id: " + userID);
+                }
+                
             }
         }
-        catch {
+        catch (error) {
+            console.log("error", error);
+        }
+    }
 
+    async function createUser(userID: string) {
+        try {
+            const {error} = await supabase.from('users').insert({id: userID});
+            if (error) {
+                throw error;
+            }
+        }
+        catch (error) {
+            console.log("error", error);
         }
     }
 

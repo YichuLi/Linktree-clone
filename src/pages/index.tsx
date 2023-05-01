@@ -74,6 +74,28 @@ export default function Home() {
     }
   }
 
+  const uploadProfilePicture = async () => {
+    try {
+      if (images.length > 0) {
+        const image = images[0];
+        if (image.file && userID) {
+          const { data, error } = await supabase.storage.from('public').upload(`${userID}/${image.file.name}`, image.file, {upsert: true}); 
+          if (error) throw error;
+          const resp = supabase.storage.from('public').getPublicUrl(data.path);
+          const publicUrl = resp.data.publicUrl;
+          const updateUserResponse = await supabase
+            .from('users')
+            .update({profile_picture_url: publicUrl})
+            .eq('id', userID);
+          if (updateUserResponse.error) throw error;
+        }
+      }
+    }
+    catch (error) {
+      console.log("error: ", error);
+    }
+  }
+
   return (
     <div className="flex flex-col w-full justify-center items-center mt-4">
       {
@@ -131,12 +153,14 @@ export default function Home() {
             </div>
             <div>
               <h1> Image Uploading</h1>
-              <Image 
-                src = {images[0]['data_url']}
-                height={100}
-                width={100}
-                alt = "profile picture"
-              />
+              {
+                images.length > 0 && (<Image 
+                  src = {images[0]['data_url']}
+                  height={100}
+                  width={100}
+                  alt = "profile picture"
+                />)
+              }
               <ImageUploading
                 multiple
                 value={images}
@@ -164,6 +188,14 @@ export default function Home() {
                 )}
 
               </ImageUploading>
+
+              <button
+              type="button"
+              className="mt-4 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+              onClick={uploadProfilePicture}
+              >
+              Upload Profile Picture
+            </button>
             </div>
           </>
         )
