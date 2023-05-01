@@ -1,5 +1,6 @@
-import supabase from '../../utils/supabaseClient'
+import supabase from '../../../utils/supabaseClient'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/router'
 import Image from 'next/image'
 import ImageUploading, { ImageListType } from 'react-images-uploading';
 
@@ -16,6 +17,9 @@ export default function Home() {
   const [links, setLinks] = useState<Link[]>();
   const [images, setImages] = useState<ImageListType>([]);
   const [profilePictureUrl, setProfilePictureUrl] = useState<string | undefined>();
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const router = useRouter();
+  const creatorSlug = router.query.creatorSlug;
 
   const onChange = (imageList: ImageListType) => {
     setImages(imageList);
@@ -25,10 +29,11 @@ export default function Home() {
     const getUser = async () => {
       const user = await supabase.auth.getUser();
       console.log("user", user); 
-      if ((await user).data) {
+      if (user) {
         const userID = user.data.user?.id;
         setIsAuthenticated(true);
         setUserID(userID);
+        setIsLoading(false);
         // console.log("authenticated");
       }
       console.log("isAuthenticated: ", isAuthenticated);
@@ -58,20 +63,22 @@ export default function Home() {
       try {
         const {data, error} = await supabase
           .from('users')
-          .select("profile_picture_url")
-          .eq('id', userID);
+          .select("id, profile_picture_url")
+          .eq('username', creatorSlug);
         if (error) throw error;
         const profilePictureUrl = data[0]["profile_picture_url"];
+        const userId = data[0]["id"];
         setProfilePictureUrl(profilePictureUrl);
+        setUserID(userId);
       }
       catch (error) {
         console.log("error: ", error);
       }
     }
-    if (userID) {
+    if (creatorSlug ) {
       getUser();
     }
-  }, [userID])
+  }, [creatorSlug])
 
   const addNewLink = async () => {
     try {
@@ -122,12 +129,14 @@ export default function Home() {
   return (
     <div className="flex flex-col w-full justify-center items-center mt-4">
       {
-        profilePictureUrl && <Image src={profilePictureUrl}
-          alt = "profile picture"
-          height={100}
+        profilePictureUrl && (
+        <Image
+          className="rounded-full object-cover"
+          src={profilePictureUrl}
+          alt="profile picture"
           width={100}
-          className='rounded-full'
-        />
+          height={100}
+        />)
       }
       {
         links?.map((link: Link, index: number) => (
@@ -144,7 +153,7 @@ export default function Home() {
         ))
       }
       {
-        isAuthenticated && (
+        !isLoading && isAuthenticated && (
           <>
           <div>
             <h1> New link creation</h1>
@@ -228,8 +237,7 @@ export default function Home() {
               Upload Profile Picture
             </button>
             </div>
-          </>
-        )
+          </>)
       }
     </div>
   )

@@ -16,7 +16,7 @@ export default function Login() {
                 }
                 const userID = resp.data.user?.id;
                 console.log("user id: " + userID);
-                router.push("/");
+                router.push("/Andy");
             }
         }
         catch {
