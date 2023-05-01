@@ -1,5 +1,7 @@
 import supabase from '../../utils/supabaseClient'
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
+import ImageUploading, { ImageListType } from 'react-images-uploading';
 
 type Link = {
   title: string;
@@ -12,6 +14,10 @@ export default function Home() {
   const [title, setTitle] = useState<string | undefined>();
   const [url, setUrl] = useState<string | undefined>();
   const [links, setLinks] = useState<Link[]>();
+  const [images, setImages] = useState<ImageListType>([]);
+  const onChange = (imageList: ImageListType) => {
+    setImages(imageList);
+  }
 
   useEffect(() => {
     const getUser = async () => {
@@ -87,39 +93,78 @@ export default function Home() {
       {
         isAuthenticated && (
           <>
-          <div className="mt-4">
-              <div className="block text-sm font-medium text-gray-700">
-                    Title
-              </div>
-              <input
-                  type="text"
-                  name="title"
-                  id="title"
-                  className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  placeholder="my awesome link"
-                  onChange={(e) => setTitle(e.target.value)}
+          <div>
+            <h1> New link creation</h1>
+            <div className="mt-4">
+                <div className="block text-sm font-medium text-gray-700">
+                      Title
+                </div>
+                <input
+                    type="text"
+                    name="title"
+                    id="title"
+                    className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    placeholder="my awesome link"
+                    onChange={(e) => setTitle(e.target.value)}
+                />
+            </div>
+            <div className="mt-4">
+                <div className="block text-sm font-medium text-gray-700">
+                  URL
+                </div>
+                <input
+                    type="text"
+                    name="url"
+                    id="url"
+                    className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    placeholder="https://github.com/YichuLi"
+                    onChange={(e) => setUrl(e.target.value)}
+                />
+            </div>
+            <button
+              type="button"
+              className="mt-4 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+              onClick={addNewLink}
+            >
+              Add new link
+            </button>
+            </div>
+            <div>
+              <h1> Image Uploading</h1>
+              <Image 
+                src = {images[0]['data_url']}
+                height={100}
+                width={100}
+                alt = "profile picture"
               />
-          </div>
-          <div className="mt-4">
-              <div className="block text-sm font-medium text-gray-700">
-                URL
-              </div>
-              <input
-                  type="text"
-                  name="url"
-                  id="url"
-                  className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  placeholder="https://github.com/YichuLi"
-                  onChange={(e) => setUrl(e.target.value)}
-              />
-          </div>
-          <button
-            type="button"
-            className="mt-4 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-            onClick={addNewLink}
-          >
-            Add new link
-          </button>
+              <ImageUploading
+                multiple
+                value={images}
+                onChange={onChange}
+                maxNumber={1}
+                dataURLKey="data_url"
+              >
+                {({ onImageUpload, onImageRemoveAll, isDragging, dragProps }) => (
+                  // write your building UI
+                  <div className="upload__image-wrapper bg-slate-300 flex justify-center items-center rounded-lg" style={isDragging ? { color: "red" } : undefined} {...dragProps}>
+                    {
+                      images.length === 0 ? (
+                        <button
+                          style = {isDragging ? {color: "red"} : undefined}
+                          onClick={onImageUpload}
+                          {...dragProps}
+                          className="w-3/4">
+                          Click or Drop here
+                          </button>
+                      ) : (
+                        <button onClick={onImageRemoveAll}>Remove all images</button>
+                      )
+                    }
+                  </div>
+                )}
+
+              </ImageUploading>
+            </div>
           </>
         )
       }
