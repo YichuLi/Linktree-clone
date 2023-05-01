@@ -15,6 +15,8 @@ export default function Home() {
   const [url, setUrl] = useState<string | undefined>();
   const [links, setLinks] = useState<Link[]>();
   const [images, setImages] = useState<ImageListType>([]);
+  const [profilePictureUrl, setProfilePictureUrl] = useState<string | undefined>();
+
   const onChange = (imageList: ImageListType) => {
     setImages(imageList);
   }
@@ -48,6 +50,26 @@ export default function Home() {
     }
     if (userID) {
       getLinks();
+    }
+  }, [userID])
+
+  useEffect(() => {
+    const getUser = async () => {
+      try {
+        const {data, error} = await supabase
+          .from('users')
+          .select("profile_picture_url")
+          .eq('id', userID);
+        if (error) throw error;
+        const profilePictureUrl = data[0]["profile_picture_url"];
+        setProfilePictureUrl(profilePictureUrl);
+      }
+      catch (error) {
+        console.log("error: ", error);
+      }
+    }
+    if (userID) {
+      getUser();
     }
   }, [userID])
 
@@ -88,6 +110,7 @@ export default function Home() {
             .update({profile_picture_url: publicUrl})
             .eq('id', userID);
           if (updateUserResponse.error) throw error;
+          setProfilePictureUrl(publicUrl);
         }
       }
     }
@@ -98,6 +121,14 @@ export default function Home() {
 
   return (
     <div className="flex flex-col w-full justify-center items-center mt-4">
+      {
+        profilePictureUrl && <Image src={profilePictureUrl}
+          alt = "profile picture"
+          height={100}
+          width={100}
+          className='rounded-full'
+        />
+      }
       {
         links?.map((link: Link, index: number) => (
           <div
